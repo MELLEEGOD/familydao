@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Family DAO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Montserrat", "ui-sans-serif", "system-ui", "sans-serif"]
+            },
+            colors: {
+              ink: "#17212b",
+              mint: "#1f9d74",
+              berry: "#8b3d68",
+              sun: "#f6b94b"
+            },
+            boxShadow: {
+              soft: "0 18px 60px rgba(23, 33, 43, 0.10)"
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="stylesheet" href="/styles.css?v=43" />
+    <script>
+      document.documentElement.classList.toggle(
+        "theme-dark",
+        localStorage.getItem("family-dao-theme") === "dark"
+      );
+    </script>
+  </head>
+  <body class="min-h-screen text-ink antialiased">
+    <div class="app-shell mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
+      <header class="app-header flex flex-col gap-4 border-b border-stone-200/90 pb-5 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.24em] text-mint">Private household ledger</p>
+          <h1 class="app-title mt-2 text-3xl font-black tracking-tight text-ink sm:text-4xl">Family DAO</h1>
+        </div>
+        <div class="top-controls flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div id="profileBadge" class="profile-badge" aria-live="polite"></div>
+          <button
+            id="themeToggle"
+            class="focus-ring rounded-md border border-stone-300 bg-white px-4 py-3 text-sm font-black shadow-sm hover:border-mint"
+            type="button"
+          >
+            Dark theme
+          </button>
+        </div>
+      </header>
+
+      <main class="main-content flex-1 py-6">
+        <section id="stats" class="stats-grid grid gap-4 md:grid-cols-2"></section>
+        <section id="commandCenter" class="mt-4"></section>
+
+        <section class="mt-6">
+          <div class="dashboard-tabs flex gap-2 overflow-x-auto rounded-lg border border-stone-200 bg-white p-2 shadow-sm" role="tablist"></div>
+
+          <div id="message" class="mt-4 hidden rounded-md border px-4 py-3 text-sm font-semibold"></div>
+
+          <div class="tab-stack mt-5">
+            <section id="tab-chores" class="tab-panel"></section>
+            <section id="tab-shop" class="tab-panel hidden"></section>
+            <section id="tab-finance" class="tab-panel hidden"></section>
+            <section id="tab-parent" class="tab-panel hidden"></section>
+            <section id="tab-chore-create" class="tab-panel hidden"></section>
+            <section id="tab-growth" class="tab-panel hidden"></section>
+            <section id="tab-insights" class="tab-panel hidden"></section>
+            <section id="tab-ledger" class="tab-panel hidden"></section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="confirmOverlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-ink/60 px-4 backdrop-blur-sm">
+      <section class="w-full max-w-md rounded-lg border border-stone-200 bg-white p-5 shadow-soft">
+        <p class="text-sm font-black uppercase tracking-[0.18em] text-berry">Parent confirmation</p>
+        <h2 id="confirmTitle" class="mt-2 text-2xl font-black text-ink">Remove reward?</h2>
+        <p id="confirmBody" class="mt-3 text-sm leading-6 text-stone-600"></p>
+        <div class="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button id="confirmCancel" class="focus-ring rounded-md border border-stone-300 bg-white px-4 py-2 text-sm font-black text-stone-700" type="button">
+            Keep reward
+          </button>
+          <button id="confirmAccept" class="focus-ring rounded-md bg-rose-600 px-4 py-2 text-sm font-black text-white hover:bg-rose-700" type="button">
+            Remove reward
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div id="commandOverlay" class="command-overlay fixed inset-0 z-50 hidden items-start justify-center bg-ink/60 px-4 py-6 backdrop-blur-sm sm:py-10">
+      <section class="command-panel w-full max-w-2xl rounded-lg border border-stone-200 bg-white p-4 shadow-soft">
+        <div class="flex items-center gap-3">
+          <input
+            id="commandSearch"
+            class="focus-ring flex-1 rounded-md border border-stone-300 bg-white px-4 py-3 text-sm font-bold"
+            placeholder="Search actions, tabs, chores, rewards, and ledger"
+            type="search"
+          />
+          <button id="commandClose" class="focus-ring rounded-md border border-stone-300 bg-white px-3 py-3 text-sm font-black text-stone-700" type="button">
+            Close
+          </button>
+        </div>
+        <div id="commandResults" class="mt-4 grid gap-2"></div>
+      </section>
+    </div>
+
+    <script src="/selects.js?v=3" defer></script>
+    <script src="/app.js?v=39" defer></script>
+  </body>
+</html>

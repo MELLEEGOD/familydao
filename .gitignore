@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Local runtime state
+db.json
+*.broken
+server-start.*.log
+*.log
+
+# Local tooling and virtual environments
+.uv-cache/
+.venv/
+venv/
+env/
+
+# Secrets and machine-local config
+.env
+.env.*
+!.env.example
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
