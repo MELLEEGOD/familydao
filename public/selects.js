@@ -1,4 +1,4 @@
-window.FamilyDAOSelects = (() => {
+window.FamilyCreditsSelects = (() => {
   const escapeHtml = (value) =>
     String(value ?? "")
       .replaceAll("&", "&amp;")

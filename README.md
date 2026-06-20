@@ -1,14 +1,28 @@
-# Family DAO
+# Family Credits
 
-Family DAO is a local-first household credit ledger. It gives parents and children a shared browser dashboard for chores, Family Credits, savings, rewards, reminders, credit requests, and family fund goals.
+Family Credits is a local-first household chore and allowance system. It helps parents and children coordinate chores, earn rewards, track savings, and keep the daily family routine visible in one place.
 
 The backend is a single Python standard-library server in `app.py`. The frontend is plain HTML, CSS, and JavaScript in `public/`.
 
+## What v1 is
+
+- Chores with clear payouts and parent approval
+- Allowance and reward tracking
+- Savings balances and simple household goals
+- Parent and child portals with separate login flows
+
+## What v1 is not
+
+- A general family OS
+- A finance app for adults
+- A social network
+- A crypto or DAO product
+- A kitchen sink of every household feature
+
 ## Features
 
-- Parent and child portals with separate login flows
-- Chore bounty board, daily chore presets, deadlines, and parent approvals
-- Family Credits ledger with savings, withdrawals, loans, allowance runs, and adjustments
+- Chore bounty board with daily presets, deadlines, and parent approvals
+- Family Credits ledger for earnings, spending, savings, loans, and adjustments
 - Reward shop with stock and affordability checks
 - Family fund contributions and progress tracking
 - Personal reminders and appreciation checkpoints
@@ -92,8 +106,8 @@ The GitHub Actions workflow in `.github/workflows/ci.yml` runs these checks on p
 
 ## Security Notes
 
-Family DAO is designed as a local prototype, not an internet-facing production service. See `SECURITY.md` before using it with sensitive data.
+Family Credits is designed as a local prototype, not an internet-facing production service. See `SECURITY.md` before using it with sensitive data.
 
 ## License
 
-Family DAO is licensed under the GNU General Public License v3.0. See `LICENSE` for the full license text.
+No license has been selected yet. Add a license before accepting outside contributions or publishing this as reusable open-source software.

@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an improvement for Family DAO
+about: Suggest an improvement for Family Credits
 title: "[Feature]: "
 labels: enhancement
 assignees: ""

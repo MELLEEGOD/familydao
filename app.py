@@ -26,7 +26,7 @@ DB_PATH = ROOT / "db.json"
 PORT = int(os.environ.get("PORT", "3000"))
 INTEREST_RATE_DEFAULT = 10
 PASSWORD_SALT = "family-dao-local-prototype"
-SESSION_COOKIE = "family_dao_session"
+SESSION_COOKIE = "family_credits_session"
 SESSION_MAX_AGE_SECONDS = 60 * 60 * 8
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
 OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "openai/gpt-4o-mini")
@@ -326,6 +326,12 @@ def public_state(state: dict) -> dict:
     }
 
 
+def public_login_state(state: dict) -> dict:
+    return {
+        "users": [{"id": user["id"], "name": user["name"], "role": user["role"]} for user in state["users"]]
+    }
+
+
 def create_id(prefix: str) -> str:
     suffix = "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6))
     return f"{prefix}_{int(time.time() * 1000):x}_{suffix}"
@@ -431,8 +437,14 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
                     return self.serve_portal("ADMIN")
                 if path == "/child":
                     return self.serve_portal("USER")
+                if path == "/api/login-state":
+                    return self.send_json(public_login_state(read_state()))
                 if path == "/api/state":
-                    return self.send_json(public_state(read_state()))
+                    state = read_state()
+                    session = get_session(self.parse_cookie(SESSION_COOKIE))
+                    if not session or not get_user(state, session.get("userId")):
+                        raise AppError("Please log in again.", 401)
+                    return self.send_json(public_state(state))
                 return self.serve_static(path)
 
             body = self.read_json_body()
@@ -459,6 +471,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
     def route_api(self, method: str, path: str, body: dict):
         if method == "POST" and path == "/api/login":
             return self.login(body)
+        auth_cookie = self.parse_cookie(SESSION_COOKIE)
         if not path.startswith("/api/"):
             raise AppError("Not found.", 404)
 
@@ -542,7 +555,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def ai_suggest(self, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         provider = str(body.get("provider") or "openai").strip().lower()
         provider_labels = {
             "openai": "OpenAI",
@@ -576,7 +589,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
         use_case = required_text(body.get("useCase") or "CHORE", "Suggestion type")
         description = required_text(body.get("description"), "Description")
         system_prompt = (
-            "You are the Family DAO AI helper. Suggest fair Family Credit amounts for a household ledger. "
+            "You are the Family Credits AI helper. Suggest fair Family Credit amounts for a household ledger. "
             "Use practical, age-appropriate values. Do not approve transactions; only advise a parent."
         )
         user_prompt = (
@@ -627,7 +640,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
                 "HTTP-Referer": "http://localhost:3000",
-                "X-Title": "Family DAO",
+                "X-Title": "Family Credits",
             }
         elif provider == "google":
             google_schema = {
@@ -792,7 +805,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def create_user(self, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         name = required_text(body.get("name"), "Name")
         role = str(body.get("role") or "USER").strip().upper()
         if role not in {"ADMIN", "USER"}:
@@ -816,7 +829,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def update_user(self, target_id: str, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         target_user = get_user(state, target_id)
         if not target_user:
             return self.send_json({"error": "User not found."}, 404)
@@ -830,7 +843,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def delete_user(self, target_id: str, body: dict):
         state = read_state()
-        admin = require_admin(state, body.get("userId"), body.get("authToken"))
+        admin = require_admin(state, body.get("userId"), auth_cookie)
         target_user = get_user(state, target_id)
         if not target_user:
             return self.send_json({"error": "User not found."}, 404)
@@ -847,7 +860,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def run_allowance(self, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         allowance_month = body.get("month") or current_allowance_month()
         for user in state["users"]:
             if user.get("role") == "USER" and user.get("monthly_allowance", 0) > 0 and user.get("last_allowance_month") != allowance_month:
@@ -858,7 +871,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def adjust_credits(self, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         target_user = require_child(state, body.get("targetUserId"))
         amount = positive_number(body.get("amount"), "Amount")
         direction = str(body.get("direction") or "add").lower()
@@ -880,7 +893,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def create_credit_request(self, body: dict):
         state = read_state()
-        child = require_child(state, body.get("userId"), body.get("authToken"))
+        child = require_child(state, body.get("userId"), auth_cookie)
         request_type = str(body.get("request_type") or "EXTRA_CREDIT").upper()
         amount = positive_number(body.get("amount"), "Amount")
         reason = required_text(body.get("reason"), "Reason")
@@ -909,7 +922,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def approve_credit_request(self, request_id: str, body: dict):
         state = read_state()
-        admin = require_admin(state, body.get("userId"), body.get("authToken"))
+        admin = require_admin(state, body.get("userId"), auth_cookie)
         request = next((entry for entry in state["creditRequests"] if entry["id"] == request_id), None)
         if not request:
             return self.send_json({"error": "Credit request not found."}, 404)
@@ -925,7 +938,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def reject_credit_request(self, request_id: str, body: dict):
         state = read_state()
-        admin = require_admin(state, body.get("userId"), body.get("authToken"))
+        admin = require_admin(state, body.get("userId"), auth_cookie)
         request = next((entry for entry in state["creditRequests"] if entry["id"] == request_id), None)
         if not request:
             return self.send_json({"error": "Credit request not found."}, 404)
@@ -938,7 +951,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def repay_loan(self, body: dict):
         state = read_state()
-        child = require_child(state, body.get("userId"), body.get("authToken"))
+        child = require_child(state, body.get("userId"), auth_cookie)
         amount = positive_number(body.get("amount"), "Amount")
         current_loan = non_negative_number(child.get("loan_balance", 0), "Loan balance")
         if current_loan <= 0:
@@ -954,7 +967,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def create_checkpoint(self, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         target_user = require_child(state, body.get("targetUserId"))
         title = required_text(body.get("title"), "Title")
         amount = positive_number(body.get("amount"), "Amount")
@@ -994,7 +1007,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def generate_daily_tasks(self, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         today = today_key()
         templates = state.get("dailyChorePresets", [])
         if not templates:
@@ -1007,7 +1020,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def create_daily_chore_preset(self, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         preset = {
             "id": create_id("preset"),
             "title": required_text(body.get("title"), "Title"),
@@ -1020,7 +1033,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def delete_daily_chore_preset(self, preset_id: str, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         original_count = len(state["dailyChorePresets"])
         state["dailyChorePresets"] = [entry for entry in state["dailyChorePresets"] if entry["id"] != preset_id]
         if len(state["dailyChorePresets"]) == original_count:
@@ -1029,7 +1042,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def add_daily_chore_today(self, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         preset = next((entry for entry in state["dailyChorePresets"] if entry["id"] == body.get("presetId")), None)
         if not preset:
             return self.send_json({"error": "Daily chore preset not found."}, 404)
@@ -1047,7 +1060,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
         actor = get_user(state, body.get("userId"))
         if not actor:
             return self.send_json({"error": "User not found."}, 404)
-        require_session(state, actor["id"], body.get("authToken"))
+        require_session(state, actor["id"], auth_cookie)
         target_user_id = body.get("targetUserId") if actor.get("role") == "ADMIN" else actor["id"]
         target_user = require_child(state, target_user_id)
         title = required_text(body.get("title"), "Title")
@@ -1069,7 +1082,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def complete_reminder(self, reminder_id: str, body: dict):
         state = read_state()
-        child = require_child(state, body.get("userId"), body.get("authToken"))
+        child = require_child(state, body.get("userId"), auth_cookie)
         reminder = next((entry for entry in state["reminders"] if entry["id"] == reminder_id), None)
         if not reminder:
             return self.send_json({"error": "Reminder not found."}, 404)
@@ -1083,7 +1096,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def contribute_family_fund(self, body: dict):
         state = read_state()
-        child = require_child(state, body.get("userId"), body.get("authToken"))
+        child = require_child(state, body.get("userId"), auth_cookie)
         amount = positive_number(body.get("amount"), "Amount")
         source = str(body.get("source") or "savings").lower()
         if source not in {"savings", "liquid"}:
@@ -1102,7 +1115,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def create_chore(self, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         state["chores"].append({
             "id": create_id("chore"),
             "title": required_text(body.get("title"), "Title"),
@@ -1116,7 +1129,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def update_chore(self, chore_id: str, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         chore = next((entry for entry in state["chores"] if entry["id"] == chore_id), None)
         if not chore:
             return self.send_json({"error": "Chore not found."}, 404)
@@ -1127,7 +1140,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def complete_chore(self, chore_id: str, body: dict):
         state = read_state()
-        child = require_child(state, body.get("userId"), body.get("authToken"))
+        child = require_child(state, body.get("userId"), auth_cookie)
         chore = next((entry for entry in state["chores"] if entry["id"] == chore_id), None)
         if not chore:
             return self.send_json({"error": "Chore not found."}, 404)
@@ -1141,7 +1154,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def approve_chore(self, chore_id: str, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         chore = next((entry for entry in state["chores"] if entry["id"] == chore_id), None)
         if not chore:
             return self.send_json({"error": "Chore not found."}, 404)
@@ -1157,7 +1170,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def delete_chore(self, chore_id: str, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         chore = next((entry for entry in state["chores"] if entry["id"] == chore_id), None)
         if not chore:
             return self.send_json({"error": "Chore not found."}, 404)
@@ -1168,7 +1181,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def create_shop_item(self, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         state["shopItems"].append({
             "id": create_id("item"),
             "title": required_text(body.get("title"), "Title"),
@@ -1180,7 +1193,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def purchase_shop_item(self, item_id: str, body: dict):
         state = read_state()
-        child = require_child(state, body.get("userId"), body.get("authToken"))
+        child = require_child(state, body.get("userId"), auth_cookie)
         item = next((entry for entry in state["shopItems"] if entry["id"] == item_id), None)
         if not item:
             return self.send_json({"error": "Shop item not found."}, 404)
@@ -1196,7 +1209,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def delete_shop_item(self, item_id: str, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         original_count = len(state["shopItems"])
         state["shopItems"] = [entry for entry in state["shopItems"] if entry["id"] != item_id]
         if len(state["shopItems"]) == original_count:
@@ -1205,7 +1218,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def deposit_savings(self, body: dict):
         state = read_state()
-        child = require_child(state, body.get("userId"), body.get("authToken"))
+        child = require_child(state, body.get("userId"), auth_cookie)
         amount = positive_number(body.get("amount"), "Amount")
         if child.get("balance", 0) < amount:
             return self.send_json({"error": "Insufficient liquid Family Credits."}, 409)
@@ -1216,7 +1229,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def withdraw_savings(self, body: dict):
         state = read_state()
-        child = require_child(state, body.get("userId"), body.get("authToken"))
+        child = require_child(state, body.get("userId"), auth_cookie)
         amount = positive_number(body.get("amount"), "Amount")
         if child.get("savings_balance", 0) < amount:
             return self.send_json({"error": "Insufficient savings balance."}, 409)
@@ -1227,7 +1240,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 
     def pay_interest(self, body: dict):
         state = read_state()
-        require_admin(state, body.get("userId"), body.get("authToken"))
+        require_admin(state, body.get("userId"), auth_cookie)
         interest_rate = positive_number(body.get("interestRate") or INTEREST_RATE_DEFAULT, "Interest rate")
         for user in state["users"]:
             if user.get("role") == "USER" and user.get("savings_balance", 0) > 0:
@@ -1241,7 +1254,7 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
 def main() -> None:
     ensure_database()
     server = ThreadingHTTPServer(("0.0.0.0", PORT), FamilyDAOHandler)
-    print(f"Family DAO Python server is running at http://localhost:{PORT}")
+    print(f"Family Credits Python server is running at http://localhost:{PORT}")
     server.serve_forever()
 
 

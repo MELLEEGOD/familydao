@@ -1,6 +1,6 @@
 # Security Policy
 
-Family DAO is a local-first household prototype. It is not hardened for internet-facing production use.
+Family Credits is a local-first household prototype. It is not hardened for internet-facing production use.
 
 ## Supported Use
 

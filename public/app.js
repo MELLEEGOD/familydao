@@ -6,7 +6,7 @@ const portalMode = location.pathname.startsWith("/parent")
 
 const portalSettings = {
   all: {
-    title: "Family DAO",
+    title: "Family Credits",
     eyebrow: "Family credits made simple",
     userRole: null,
     defaultUser: "u_alice",
@@ -32,7 +32,7 @@ const portalSettings = {
 };
 
 const portal = portalSettings[portalMode];
-const portalStorageKey = (key) => `family-dao-${portalMode}-${key}`;
+const portalStorageKey = (key) => `family-credits-${portalMode}-${key}`;
 const tabLabels = {
   all: {
     chores: "Chores",
@@ -63,11 +63,10 @@ const tabLabels = {
 const app = {
   state: null,
   activeUserId: localStorage.getItem(portalStorageKey("user")) || portal.defaultUser,
-  authToken: localStorage.getItem(portalStorageKey("token")) || "",
   activeTab: localStorage.getItem(portalStorageKey("tab")) || portal.defaultTab,
-  focusPersonId: localStorage.getItem("family-dao-focus-person") || null,
-  statsPersonId: localStorage.getItem("family-dao-stats-person") || null,
-  theme: localStorage.getItem("family-dao-theme") || "light",
+  focusPersonId: localStorage.getItem("family-credits-focus-person") || null,
+  statsPersonId: localStorage.getItem("family-credits-stats-person") || null,
+  theme: localStorage.getItem("family-credits-theme") || "light",
   ui: {
     shopQuery: "",
     shopFilter: "all",
@@ -203,7 +202,6 @@ async function api(path, options = {}) {
   const payload = await response.json();
   if (!response.ok) {
     if (response.status === 401 && portalMode !== "all") {
-      localStorage.removeItem(portalStorageKey("token"));
       window.location.href = "/login";
     }
     throw new Error(friendlyError(payload.error || "Request failed."));
@@ -217,12 +215,16 @@ async function api(path, options = {}) {
 }
 
 async function loadState() {
-  if (portalMode !== "all" && !app.authToken) {
+  if (portalMode !== "all" && !app.activeUserId) {
     window.location.href = "/login";
     return;
   }
 
   const response = await fetch("/api/state");
+  if (response.status === 401) {
+    window.location.href = "/login";
+    return;
+  }
   app.state = await response.json();
   const users = visibleUsers();
   if (!users.some((user) => user.id === app.activeUserId)) {
@@ -339,7 +341,7 @@ function render() {
   renderTabs();
   renderActiveTab();
   renderCommandPalette();
-  FamilyDAOSelects.enhance();
+  FamilyCreditsSelects.enhance();
   prepareForms();
   applyLiveFilters();
 }
@@ -430,7 +432,7 @@ function renderPortalChrome() {
 
 function applyTheme() {
   document.documentElement.classList.toggle("theme-dark", app.theme === "dark");
-  localStorage.setItem("family-dao-theme", app.theme);
+  localStorage.setItem("family-credits-theme", app.theme);
 }
 
 function renderThemeButton() {
@@ -2026,7 +2028,7 @@ function applyLedgerFilters() {
   byId("ledgerEmpty")?.classList.toggle("hidden", visibleCount > 0);
 }
 
-const withUser = (body = {}) => ({ ...body, userId: activeUser().id, authToken: app.authToken });
+const withUser = (body = {}) => ({ ...body, userId: activeUser().id });
 const post = (path, body) => api(path, { method: "POST", body: withUser(body) });
 const remove = (path) => api(path, { method: "DELETE", body: withUser() });
 
@@ -2351,7 +2353,7 @@ document.addEventListener("click", async (event) => {
 
   if (action === "focus-person" || action === "stats-person") {
     const key = action === "focus-person" ? "focusPersonId" : "statsPersonId";
-    const storageKey = action === "focus-person" ? "family-dao-focus-person" : "family-dao-stats-person";
+    const storageKey = action === "focus-person" ? "family-credits-focus-person" : "family-credits-stats-person";
     app[key] = id;
     localStorage.setItem(storageKey, id);
     if (app.activeTab === "insights") {

@@ -29,7 +29,7 @@ function requirePassword(field, label) {
 }
 
 async function loadLogin() {
-  const response = await fetch("/api/state");
+  const response = await fetch("/api/login-state");
   const state = await response.json();
   const parent = state.users.find((user) => user.role === "ADMIN");
   const children = state.users.filter((user) => user.role === "USER");
@@ -39,11 +39,11 @@ async function loadLogin() {
   }
 
   childSelect.replaceChildren(...children.map((user) => new Option(user.name, user.id)));
-  const savedChild = localStorage.getItem("family-dao-child-user");
+  const savedChild = localStorage.getItem("family-credits-child-user");
   if (savedChild && children.some((user) => user.id === savedChild)) {
     childSelect.value = savedChild;
   }
-  FamilyDAOSelects.enhance({ wrapperClass: "mt-2" });
+  FamilyCreditsSelects.enhance({ wrapperClass: "mt-2" });
 }
 
 async function login({ role, userId, password }) {
@@ -59,8 +59,7 @@ async function login({ role, userId, password }) {
   }
 
   const mode = role === "ADMIN" ? "parent" : "child";
-  localStorage.setItem(`family-dao-${mode}-user`, payload.user.id);
-  localStorage.setItem(`family-dao-${mode}-token`, payload.authToken);
+  localStorage.setItem(`family-credits-${mode}-user`, payload.user.id);
   window.location.href = role === "ADMIN" ? "/parent" : "/child";
 }
 
