@@ -305,6 +305,10 @@ th {
   gap: var(--gap) !important;
 }
 
+.dashboard-metric-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)) !important;
+}
+
 .action-center {
   position: relative;
   overflow: hidden;
@@ -320,11 +324,17 @@ th {
 
 .quick-tile,
 .command-result {
-  display: block;
-  min-height: 5.8rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 7rem;
   color: var(--text) !important;
   text-align: left;
   box-shadow: none !important;
+}
+
+.quick-tile {
+  min-width: 0;
 }
 
 .quick-tile:hover,
@@ -335,6 +345,7 @@ th {
 
 .quick-tile-kicker {
   display: block;
+  line-height: 1.2;
 }
 
 .quick-tone-mint {

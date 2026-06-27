@@ -576,7 +576,7 @@ function renderCommandCenter() {
           <button data-action="open-ledger" class="focus-ring rounded-md border border-stone-300 bg-white px-4 py-2 text-sm font-black text-stone-700" type="button">History</button>
         </div>
       </div>
-      <div class="mt-4 grid gap-3 md:grid-cols-4">
+      <div class="dashboard-metric-grid mt-4 grid gap-3">
         ${actions
           .map(
             (item) => `
@@ -1740,7 +1740,7 @@ function renderPeopleStats() {
         </div>
       </div>
 
-      <div class="mt-5 grid gap-4 md:grid-cols-4">
+      <div class="dashboard-metric-grid mt-5 grid gap-4">
         ${metricCard("Liquid", money(selected.balance), "Spendable FC")}
         ${metricCard("Savings", money(selected.savings_balance), "Personal vault")}
         ${metricCard("Loan", money(selected.loan_balance || 0), "Outstanding balance")}
