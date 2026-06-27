@@ -620,7 +620,7 @@ function adminChoreForm() {
   return `
     <details class="mb-5 rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
       <summary class="cursor-pointer text-sm font-black text-ink">Create chore bounty</summary>
-      <form id="choreForm" class="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr_120px_160px_auto]">
+      <form id="choreForm" class="compact-form-grid compact-form-grid-deadline mt-4 grid gap-3">
         <input name="title" class="${FIELD}" placeholder="Title" required />
         <input name="description" class="${FIELD}" placeholder="Description" required />
         <input name="bounty" type="number" min="1" step="1" class="${FIELD}" placeholder="Bounty" required />
@@ -686,7 +686,7 @@ function deadlineOverviewWidget() {
         </div>
         <button data-action="open-chores" class="focus-ring rounded-md bg-ink px-4 py-2 text-sm font-black text-white hover:bg-stone-700" type="button">${isAdmin() ? "Manage chores" : "View chores"}</button>
       </div>
-      <div class="mt-4 grid gap-3 md:grid-cols-3">
+      <div class="overview-card-grid mt-4 grid gap-3">
         ${
           upcoming.length
             ? upcoming.map((item) => deadlineMiniCard(item)).join("")
@@ -737,7 +737,7 @@ function renderChoreCreation() {
 
           <details class="mt-5 rounded-md border border-stone-200 bg-stone-50 p-3">
             <summary class="cursor-pointer text-sm font-black text-ink">Add daily preset</summary>
-            <form id="dailyPresetForm" class="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr_130px_150px_auto]">
+            <form id="dailyPresetForm" class="compact-form-grid compact-form-grid-categorized mt-4 grid gap-3">
               <input name="title" class="${FIELD}" placeholder="Preset title" required />
               <input name="description" class="${FIELD}" placeholder="Description" required />
               <input name="bounty" type="number" min="1" step="1" class="${FIELD}" placeholder="Bounty" required />
@@ -1009,7 +1009,7 @@ function adminShopForm() {
   return `
     <details class="mb-5 rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
       <summary class="cursor-pointer text-sm font-black text-ink">Add reward item</summary>
-      <form id="shopForm" class="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr_110px_110px_auto]">
+      <form id="shopForm" class="compact-form-grid compact-form-grid-inventory mt-4 grid gap-3">
         <input name="title" class="${FIELD}" placeholder="Title" required />
         <input name="description" class="${FIELD}" placeholder="Description" required />
         <input name="cost" type="number" min="1" step="1" class="${FIELD}" placeholder="Cost" required />
@@ -1029,7 +1029,7 @@ function renderShop() {
   byId("tab-shop").innerHTML = `
     ${adminShopForm()}
     <section class="mb-4 rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
-      <div class="grid gap-3 lg:grid-cols-[1fr_220px]">
+      <div class="filter-bar-grid grid gap-3">
         <input id="shopSearch" class="${FIELD}" type="search" placeholder="Search rewards" value="${escapeHtml(app.ui.shopQuery)}" />
         <select id="shopFilter" class="${SELECT}">
           <option value="all" ${app.ui.shopFilter === "all" ? "selected" : ""}>All rewards</option>
