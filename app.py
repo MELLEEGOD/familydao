@@ -22,7 +22,7 @@ from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parent
 PUBLIC_DIR = ROOT / "public"
-DB_PATH = ROOT / "db.json"
+DB_PATH = Path(os.environ.get("DB_PATH") or ("/tmp/familydao-db.json" if os.environ.get("VERCEL") else ROOT / "db.json"))
 PORT = int(os.environ.get("PORT", "3000"))
 INTEREST_RATE_DEFAULT = 10
 PASSWORD_SALT = "family-dao-local-prototype"
@@ -407,21 +407,21 @@ class FamilyDAOHandler(BaseHTTPRequestHandler):
     server_version = "FamilyDAO-Python/1.0"
 
     def do_GET(self):
-        self.handle_request("GET")
+        self.handle_app_request("GET")
 
     def do_POST(self):
-        self.handle_request("POST")
+        self.handle_app_request("POST")
 
     def do_PATCH(self):
-        self.handle_request("PATCH")
+        self.handle_app_request("PATCH")
 
     def do_DELETE(self):
-        self.handle_request("DELETE")
+        self.handle_app_request("DELETE")
 
     def log_message(self, format, *args):
         print(f"{self.address_string()} - {format % args}")
 
-    def handle_request(self, method: str) -> None:
+    def handle_app_request(self, method: str) -> None:
         try:
             parsed = urlparse(self.path)
             path = unquote(parsed.path)
@@ -1260,3 +1260,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+else:
+    ensure_database()
