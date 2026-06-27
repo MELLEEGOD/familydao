@@ -309,6 +309,16 @@ th {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)) !important;
 }
 
+.admin-form-grid,
+.user-edit-grid,
+.ledger-filter-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)) !important;
+}
+
+.user-edit-grid {
+  align-items: start;
+}
+
 .action-center {
   position: relative;
   overflow: hidden;
@@ -1161,11 +1171,23 @@ textarea.rounded-md {
 }
 
 .userEditForm input[name="name"] {
-  min-width: min(100%, 11rem);
+  min-width: 0;
 }
 
 .userEditForm button {
-  min-width: 5.6rem;
+  min-width: 0;
+}
+
+.user-edit-grid label {
+  min-width: 0;
+}
+
+.user-edit-grid input[type="number"] {
+  width: 100%;
+}
+
+.ledger-filter-grid > * {
+  min-width: 0;
 }
 
 table {
@@ -1432,6 +1454,43 @@ html.theme-dark .text-rose-800 {
 }
 
 @media (min-width: 1181px) {
+  .admin-form-grid-monthly {
+    grid-template-columns:
+      minmax(12rem, 1fr)
+      minmax(8rem, 0.45fr)
+      minmax(7rem, 0.35fr)
+      minmax(7rem, 0.35fr)
+      minmax(7rem, 0.35fr)
+      minmax(9rem, 0.5fr)
+      minmax(6rem, max-content) !important;
+  }
+
+  .admin-form-grid-compact {
+    grid-template-columns:
+      minmax(12rem, 1fr)
+      minmax(8rem, 0.45fr)
+      minmax(7rem, 0.35fr)
+      minmax(7rem, 0.35fr)
+      minmax(9rem, 0.5fr)
+      minmax(6rem, max-content) !important;
+  }
+
+  .user-edit-grid {
+    grid-template-columns:
+      minmax(12rem, 1.1fr)
+      minmax(6rem, max-content)
+      minmax(6rem, max-content)
+      minmax(8rem, max-content)
+      minmax(5rem, max-content)
+      minmax(5.8rem, max-content)
+      minmax(5.8rem, max-content) !important;
+    align-items: center;
+  }
+
+  .ledger-filter-grid {
+    grid-template-columns: minmax(0, 1fr) 180px 220px !important;
+  }
+
   .daily-card-controls {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }

@@ -1234,7 +1234,7 @@ function requestCard(request, includeActions = false) {
 
 function userCreateForm({ formId, includeMonthly = true }) {
   return `
-    <form id="${formId}" class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(12rem,1fr)_minmax(8rem,0.45fr)_minmax(7rem,0.35fr)_minmax(7rem,0.35fr)_${includeMonthly ? "minmax(7rem,0.35fr)_" : ""}minmax(9rem,0.5fr)_minmax(6rem,max-content)]">
+    <form id="${formId}" class="admin-form-grid mt-5 grid gap-3 md:grid-cols-2 ${includeMonthly ? "admin-form-grid-monthly" : "admin-form-grid-compact"}">
       <input name="name" class="${FIELD}" placeholder="Name" required />
       <select name="role" class="${SELECT}">
         <option value="USER">Child</option>
@@ -1264,7 +1264,7 @@ function userRow(user) {
   const canRemove = user.id !== activeUser().id;
   return `
     <div class="rounded-md border border-stone-200 bg-stone-50 p-3 text-sm">
-      <form class="userEditForm grid gap-3 lg:grid-cols-[minmax(12rem,1.1fr)_minmax(6rem,max-content)_minmax(6rem,max-content)_minmax(8rem,max-content)_minmax(5rem,max-content)_minmax(5.8rem,max-content)_minmax(5.8rem,max-content)] lg:items-center" data-id="${user.id}">
+      <form class="userEditForm user-edit-grid grid gap-3" data-id="${user.id}">
         <div>
           <label class="sr-only" for="name-${user.id}">User name</label>
           <input
@@ -1837,7 +1837,7 @@ function renderLedger() {
   const txTypes = [...new Set(sorted.map((tx) => tx.tx_type))].sort();
   byId("tab-ledger").innerHTML = `
     <section class="mb-4 rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
-      <div class="grid gap-3 lg:grid-cols-[1fr_180px_220px]">
+      <div class="ledger-filter-grid grid gap-3">
         <input id="ledgerSearch" class="${FIELD}" type="search" placeholder="Search ledger" value="${escapeHtml(app.ui.ledgerQuery)}" />
         <select id="ledgerUser" class="${SELECT}">
           <option value="all" ${app.ui.ledgerUser === "all" ? "selected" : ""}>All people</option>
